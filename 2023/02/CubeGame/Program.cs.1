@@ -1,0 +1,46 @@
+﻿using System.IO;
+using System.Text.RegularExpressions;
+
+// See https://aka.ms/new-console-template for more information
+const string inputFileName = @"C:\dev\src\nash\advent\20231202.1\CubeGame\input-actual.txt";
+
+bool possibleGame(string line, string color, int maxCubes)
+{
+    var rx = new Regex(@"(?<qty>\d+) " + color);
+    var matches = rx.Matches(line);
+    var qtys = matches.SelectMany(m=> m.Groups.Values).Where(g=>g.Name == "qty").Select(g=>g.Value);
+    return !qtys.Any(qty => {
+        if (int.TryParse(qty, out int q))
+        {
+            return q > maxCubes;
+        }
+        return true;
+    });
+}
+
+int total = 0;
+using (var rdr = File.OpenText(inputFileName))
+{
+    while(!rdr.EndOfStream)
+    {
+        var line = rdr.ReadLine();
+        if (line == null) continue;
+
+        if (!possibleGame(line, "red", 12)) continue;
+        if (!possibleGame(line, "green", 13)) continue;
+        if (!possibleGame(line, "blue", 14)) continue;
+
+        var gameRx = new Regex(@"Game (?<num>\d+):");
+        var gameMatch = gameRx.Match(line);
+        var gameId = gameMatch.Groups.Values.Where(g => g.Name == "num").Select(g => {
+            if (int.TryParse(g.Value, out var num))
+            {
+                return num;
+            };
+            return 0;
+        }).First();
+
+        total += gameId;
+    }
+    Console.WriteLine($"{total}");
+}
