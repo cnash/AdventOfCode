@@ -1,45 +1,67 @@
-﻿namespace advent;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace advent;
 
 public class WordSearch
 {
     const string inputSample = @"C:\dev\src\nash\AdventOfCode\2024\4\input\sample";
     const int expectedSampleCount = 18;
+    const int expectedSampleCount2 = 9;
 
     const string inputActual = @"C:\dev\src\nash\AdventOfCode\2024\4\input\actual";
     public static void Main()
     {
-        Console.Write("Sample: ");
-        int answer = (new WordSearch()).HowManyXmas(inputSample);
+        Console.Write("P1 Sample: ");
+        int answer = new WordSearch().ReadPuzzle(inputSample).HowManyXmas();
         Console.WriteLine($"{answer}");
 
         if (answer != expectedSampleCount)
         {
             throw new Exception($"Sample should have returned {expectedSampleCount}");
         }
-        Console.Write("Actual: ");
-        answer = (new WordSearch()).HowManyXmas(inputActual);
+        Console.Write("P1 Actual: ");
+        answer = (new WordSearch()).ReadPuzzle(inputActual).HowManyXmas();
         Console.WriteLine($"{answer}");
+
+        Console.Write("P2 Sample: ");
+        answer = new WordSearch().ReadPuzzle(inputSample).HowManyXmas2();
+        Console.WriteLine($"{answer}");
+
+        if (answer != expectedSampleCount2)
+        {
+            throw new Exception($"Sample should have returned {expectedSampleCount2}");
+        }
+        Console.Write("P2 Actual: ");
+        answer = (new WordSearch()).ReadPuzzle(inputActual).HowManyXmas2();
+        Console.WriteLine($"{answer}");
+
     }
 
-    int HowManyXmas(string inputFilePath)
+    List<List<char>> PuzzleMap;
+    int Height => PuzzleMap.Count;
+    int Width => PuzzleMap.FirstOrDefault()?.Count ?? 0;
+
+    WordSearch ReadPuzzle(string inputFilePath)
     {
-        int xmasCount = 0;
-        List<List<char>> puzzleMap = new List<List<char>>();
+        PuzzleMap = new List<List<char>>();
         using (var rdr = File.OpenText(inputFilePath))
         {
             while (!rdr.EndOfStream)
             {
                 string line = rdr.ReadLine() ?? "";
-                puzzleMap.Add(line.ToCharArray().ToList());
+                PuzzleMap.Add(line.ToCharArray().ToList());
             }
         }
-        int height = puzzleMap.Count();
-        int width = puzzleMap.First().Count();
+        return this;
+    }
 
+    int HowManyXmas()
+    {
         var possibilities = new List<Possibility>();
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < Height; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < Width; x++)
             {
                 possibilities.AddRange(
                     Enum.GetValues<Direction>()
@@ -55,19 +77,58 @@ public class WordSearch
         }
 
         var matchCount = possibilities
-            .Where(p => p.Letter(puzzleMap) == 'X')
-            .Where(p => !p.IsDeadEnd(height, width))
+            .Where(p => p.Letter(PuzzleMap) == 'X')
+            .Where(p => !p.IsDeadEnd(Height, Width))
             .Select(p => p.Next())
-            .Where(p => p.Letter(puzzleMap) == 'M')
-            .Where(p => !p.IsDeadEnd(height, width))
+            .Where(p => p.Letter(PuzzleMap) == 'M')
+            .Where(p => !p.IsDeadEnd(Height, Width))
             .Select(p => p.Next())
-            .Where(p => p.Letter(puzzleMap) == 'A')
-            .Where(p => !p.IsDeadEnd(height, width))
+            .Where(p => p.Letter(PuzzleMap) == 'A')
+            .Where(p => !p.IsDeadEnd(Height, Width))
             .Select(p => p.Next())
-            .Where(p => p.Letter(puzzleMap) == 'S')
+            .Where(p => p.Letter(PuzzleMap) == 'S')
             .Count();
 
         return matchCount;
+    }
+
+    int HowManyXmas2()
+    {
+        var possibilities = new List<Possibility>();
+        for (var y = 1; y < Height - 1; y++)
+        {
+            for (var x = 1; x < Width - 1; x++)
+            {
+                possibilities.Add(new Possibility
+                {
+                    Coords = new Point(x, y)
+                });
+            }
+        }
+
+        // M.M S.M S.S M.S
+        // .A. .A. .A. .A.
+        // S.S S.M M.M M.S
+
+        possibilities = possibilities.Where(p => p.Letter(PuzzleMap) == 'A').ToList();
+        var matches = possibilities.Where(p =>
+        {
+            string letters = "";
+            p.Direction = Direction.UpLeft;
+            letters += p.Next().Letter(PuzzleMap);
+            p.Direction = Direction.UpRight;
+            letters += p.Next().Letter(PuzzleMap);
+            p.Direction = Direction.DownRight;
+            letters += p.Next().Letter(PuzzleMap);
+            p.Direction = Direction.DownLeft;
+            letters += p.Next().Letter(PuzzleMap);
+
+            List<string> acceptable = ["SSMM", "MSSM", "MMSS", "SMMS"];
+            return acceptable.Contains(letters);
+        }
+        ).ToList();
+
+        return matches.Count;
     }
 }
 
