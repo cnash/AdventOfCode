@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace advent;
+﻿namespace advent;
 
 public class WordSearch
 {
