@@ -1,4 +1,5 @@
-﻿using System.Formats.Asn1;
+﻿using Microsoft.VisualBasic;
+using System.Formats.Asn1;
 
 namespace advent;
 public class Pebbles
@@ -11,6 +12,7 @@ public class Pebbles
 
     const string ActualInput = "8793800 1629 65 5 960 0 138983 85629";
     const int ActualBlinkCount = 25;
+    const long CorrectActualResult1 = 194557;
     const int ActualBlinkCount2 = 75;
 
     public static void Main()
@@ -24,7 +26,8 @@ public class Pebbles
         if (Sample2Result != SampleExpectedResult2) { return; }
 
         var ActualResult = new Pebbles().Problem2(ActualInput, ActualBlinkCount);
-        Console.WriteLine($"Actual Result: {ActualResult}");
+        Console.WriteLine($"Actual Result: Expected: {CorrectActualResult1},  {ActualResult}");
+        if (CorrectActualResult1 != ActualResult) { return; }
 
         ActualResult = new Pebbles().Problem2(ActualInput, ActualBlinkCount2);
         Console.WriteLine($"Actual Result #2: {ActualResult}");
@@ -62,43 +65,77 @@ public class Pebbles
         return result.ToArray();
     }
 
-    const string cache1 = "./cache1";
-    const string cache2 = "./cache2";
-    const int pageSize = 1000;
 
     public long Problem2(string input, int blinkCount)
     {
         var pebbles = input
             .Split(' ')
-            .Select(x=> BlinkRecursive(uint.Parse(x), 1, blinkCount))
+            .Select(x=> BlinkRecursive(long.Parse(x), 1, blinkCount))
             .Sum();
 
         return pebbles;
     }
 
-    long BlinkRecursive(uint value, int blinkNo, int targetBlinkNo)
+    Dictionary<int, Dictionary<long, long>> _pastCalcs = new Dictionary<int, Dictionary<long, long>>();
+    long getPastCalc(long value, int blinkNo)
     {
+        if (_pastCalcs.TryGetValue(blinkNo, out var pastCalcsThisBlink))
+        {
+            if (pastCalcsThisBlink.TryGetValue(value, out var result))
+            {
+                return result;
+            }
+        }
+        return 0;
+    }
+    void saveCalc(long value, int blinkNo, long result)
+    {
+        if (!_pastCalcs.ContainsKey(blinkNo))
+        {
+            _pastCalcs[blinkNo] = new Dictionary<long, long>();
+        }
+        _pastCalcs[blinkNo][value] = result;
+    }
+
+    long BlinkRecursive(long value, int blinkNo, int targetBlinkNo)
+    {
+        var pastCalc = getPastCalc(value, blinkNo);
+        if (pastCalc != 0)
+        {
+            return pastCalc;
+        }
+
+        long result;
+
         if (blinkNo > targetBlinkNo)
         {
-            return 1;
+            result = 1;
         }
-
-        var nextBlinkNo = blinkNo+1;
-        if (value == 0)
+        else
         {
-            return BlinkRecursive(1, nextBlinkNo, targetBlinkNo);
+            var nextBlinkNo = blinkNo + 1;
+            if (value == 0)
+            {
+                result = BlinkRecursive(1, nextBlinkNo, targetBlinkNo);
+            }
+            else
+            {
+                var strValue = $"{value}";
+                if (strValue.Length % 2 == 1)
+                {
+                    // return BlinkRecursive((value << 11) + (value << 3), nextBlinkNo, targetBlinkNo);
+                    result = BlinkRecursive(value * 2024, nextBlinkNo, targetBlinkNo);
+                }
+                else
+                {
+                    var halfStringLength = strValue.Length >> 1;
+                    var p1 = long.Parse(strValue.Substring(0, halfStringLength));
+                    var p2 = long.Parse(strValue.Substring(halfStringLength));
+                    result = BlinkRecursive(p1, nextBlinkNo, targetBlinkNo) + BlinkRecursive(p2, nextBlinkNo, targetBlinkNo);
+                }
+            }
         }
-
-        var strValue = $"{value}";
-        if (strValue.Length % 2 == 1)
-        {
-            // return BlinkRecursive((value << 11) + (value << 3), nextBlinkNo, targetBlinkNo);
-            return BlinkRecursive(value * 2024, nextBlinkNo, targetBlinkNo);
-        }
-        var halfStringLength = strValue.Length>>1;
-        var p1 = uint.Parse(strValue.Substring(0,halfStringLength));
-        var p2 = uint.Parse(strValue.Substring(halfStringLength));
-
-        return BlinkRecursive(p1, nextBlinkNo, targetBlinkNo) + BlinkRecursive(p2, nextBlinkNo, targetBlinkNo);
+        saveCalc(value, blinkNo, result);
+        return result;
     }
 }
