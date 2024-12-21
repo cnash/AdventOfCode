@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Chris Nash",
+    "classifications": [ "Common", "Console" ],
+    "identity": "AdventOfCode.ConsoleTemplate.CSharp",
+    "name": "Advent of Code Problem Solver Template",
+    "shortName": "advent",
+    "sourceName":"AdventOfCodeTemplate",
+    "tags": {
+        "language": "C#",
+        "type":"project"
+    }
+  }

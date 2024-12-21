@@ -4,8 +4,9 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "C#: 2024/10/HoofIt Debug",
+            "name": "C#: HoofIt",
             "type": "dotnet",
             "request": "launch",
             "projectPath": "${workspaceFolder}/2024/10/HoofIt.csproj"
