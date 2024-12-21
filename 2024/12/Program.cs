@@ -1,8 +1,8 @@
 ﻿namespace advent;
 public class Garden
 {
-    const string inputSample = @"C:\Workspaces\AdventOfCode\2024\12\input-sample";
-    const string inputActual = @"C:\Workspaces\AdventOfCode\2024\12\input-actual";
+    const string inputSample = @"..\..\..\input-sample";
+    const string inputActual = @"..\..\..\input-actual";
     const int expectedSampleResult1 = 1930;
     const int expectedSampleResult2 = 1206;
 
@@ -19,6 +19,15 @@ public class Garden
         answer = new Garden().Problem2(inputSample);
         Console.WriteLine($"Problem 2 Sample: Expected: {expectedSampleResult2}, Observed: {answer}");
         if (answer != expectedSampleResult2) { return; }
+
+        answer = new Garden().Problem2("../../../sample1");
+        Console.WriteLine($"Problem 2 Sample: Expected: 80, Observed: {answer}");
+        answer = new Garden().Problem2("../../../sample2");
+        Console.WriteLine($"Problem 2 Sample: Expected: 236, Observed: {answer}");
+        answer = new Garden().Problem2("../../../sample3");
+        Console.WriteLine($"Problem 2 Sample: Expected: 368, Observed: {answer}");
+
+
         answer = new Garden().Problem2(inputActual);
         Console.WriteLine($"Problem 2 Actual: Observed: {answer}");
     }
@@ -130,19 +139,43 @@ public class Region
         get
         {
             return
-                Plots.Select(p=> 4 
-                    - Plots.Count(p2=>((p2.X == p.X-1) || (p2.X==p.X+1)) && (p2.Y == p.Y))
-                    - Plots.Count(p2=>((p2.Y == p.Y-1) || (p2.Y==p.Y+1)) && (p2.X == p.X)))
+                Plots.Select(p=> 4 - (Plots.Count(p2=>((p2.X == p.X-1) || (p2.X==p.X+1)) && (p2.Y == p.Y))
+                                    + Plots.Count(p2=>((p2.Y == p.Y-1) || (p2.Y==p.Y+1)) && (p2.X == p.X))))
                     .Sum();
         }
+    }
+
+    public int CornerCount(Coords p)
+    {
+        bool NW = Plots.Any(p2=>p2.X==p.X-1&&p2.Y==p.Y-1);
+        bool N = Plots.Any(p2=>p2.X==p.X&&p2.Y==p.Y-1);
+        bool NE = Plots.Any(p2=>p2.X==p.X+1&&p2.Y==p.Y-1);
+        bool E = Plots.Any(p2=>p2.X==p.X+1&&p2.Y==p.Y);
+        bool SE = Plots.Any(p2=>p2.X==p.X+1&&p2.Y==p.Y+1);
+        bool S = Plots.Any(p2=>p2.X==p.X&&p2.Y==p.Y+1);
+        bool SW = Plots.Any(p2=>p2.X==p.X-1&&p2.Y==p.Y+1);
+        bool W = Plots.Any(p2=>p2.X==p.X-1&&p2.Y==p.Y);
+        
+        var count = 0;
+        if (!N && !E) count++;
+        if (!E && !S) count++;
+        if (!S && !W) count++;
+        if (!W && !N) count++;
+
+        if (W && SW && !S) count++;
+        if (S && SW && !W) count++;
+        if (E && SE && !S) count++;
+        if (S && SE && !E) count++;
+
+        return count;
     }
 
     public int Cost => Area * Perimeter;
 
     public int BulkPerimeter
     {
-        get{
-            return 1;
+        get {
+            return Plots.Select(p=>CornerCount(p)).Sum();
         }
     }
 
